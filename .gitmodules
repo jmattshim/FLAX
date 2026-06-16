@@ -1,0 +1,9 @@
+[submodule "linux"]
+	path = linux
+	url = https://github.com/jmattshim/linux_for_flax.git
+[submodule "ForestDB-Bench"]
+	path = ForestDB-Bench
+	url = https://github.com/jmattshim/ForestDB-Bench.git
+[submodule "RocksDB"]
+	path = RocksDB
+	url = https://github.com/jmattshim/RocksDB.git
