@@ -1,5 +1,5 @@
 # Flash-Level Asynchronous Execution for In-Storage LSM-Tree Operations (FLAX)
-This repository contains the source code and benchmarks needed to reproduce the key results in the FLAX paper. A draft of the paper is added to this repository.
+This repository contains the source code and benchmarks needed to reproduce the key results in the [FLAX paper](FLAX-Draft.pdf).
 
 FLAX is built on top of [NVMeVirt](https://github.com/snu-csl/nvmevirt/) and uses [ForestDB-Bench](https://github.com/ForestDB-KVStore/forestdb-bench) for evaluation.
 
