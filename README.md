@@ -80,7 +80,7 @@ After loading, you may see some `dmesg` warnings. As long as they concern `__irq
 ### 5. Build RocksDB
 ```
 $ cd rocksdb
-$ mkdir build & cd build
+$ mkdir build && cd build
 $ cmake -DCMAKE_BUILD_TYPE=Release -DROCKSDB_BUILD_SHARED=ON ../
 $ make
 ```
@@ -88,7 +88,7 @@ $ make
 ### 6. Build ForestDB-Bench
 ```
 $ cd bench
-$ mkdir build & cd build
+$ mkdir build && cd build
 $ cmake -DCMAKE_INCLUDE_PATH=/path/rocksdb/include -DCMAKE_LIBRARY_PATH=/path/rocksdb/build ../
 $ make rocksdb_bench
 $ mkdir results_YCSB		# dir for result collection
@@ -96,7 +96,7 @@ $ mkdir ycsb_logs			# dir for log collection
 ```
 
 ## Evaluations
-Below are the guidelines for reproducing results mentioned in the paper from scratch. For claims and expectations of the artifact, please refer to [CLAIMS.md](CLAIMS.md)
+Below are the guidelines for reproducing results mentioned in the paper from scratch. For claims and expectations of the artifact, please refer to [CLAIMS.md](CLAIMS.md).
 
 ### 0. Before running benchmarks
 - For every experiment except §6.2 (Write Performance with FLAX), we used pre-loaded, stabilized DBs and copied them before each benchmark run.
@@ -108,6 +108,10 @@ Below are the guidelines for reproducing results mentioned in the paper from scr
 	- cgroup scripts (set_cgroup_4G/25G.sh)
 	- `bench/bench/couch_bench.cc`: L571, L2035
 	- `rocksdb/util/threadpool_imp.cc`: L379, L404
+- We differenciate FLAX and host-managed CSD with the configuration in `src/csd_dispatcher.h` 
+	- `#define SUPPORT_ASYNC (0)` denotes host-managed CSD
+	- `#define SUPPORT_ASYNC (1)` denotes FLAX
+- We use mount directory `/mnt/nvme` and `/mnt/ssd`. After `mkdir`, change the directory ownership to user account.
 
 ### 1. Copy scripts
 ```
@@ -116,7 +120,12 @@ $ ../scripts/copy-scripts.sh
 ```
 
 ### 2. Prepare base DBs
+We recommend to use an additional SSD to mount and store base DBs.
+In our setup, we used 960 GB SSD and mounted to `/mnt/ssd`.
 ```
+$ ./prepare_db.sh 128
+$ ./prepare_db.sh 4096
+$ ./prepare_db.sh bloom
 ```
 
 ### 3. Write-only workload (Figure 7)
@@ -151,11 +160,11 @@ $ ./read-only_driver.sh skew     # Figure 9(d)
 In this experiment, we test three configurations: Host, CSD, FLAX.
 We need to change the benchmark code to enable index block caching configuration.
 ```
-$ cp ../wrappers/index_block_caching.cc ../wrappers/couch_rocks.cc
+$ cp ../wrappers/index_block_caching.cc ../wrappers/couch_rocksdb.cc
 $ ./demand-load_driver.sh host
 $ ./demand-load_driver.sh csd
 $ ./demand-load_driver.sh flax
-$ cp ../wrappers/couch_rocks.cc ../wrappers/index_block_caching.cc # reset code
+$ cp ../wrappers/default.cc ../wrappers/couch_rocksdb.cc # reset code
 ```
 
 ### 7. YCSB (Figure 10)
