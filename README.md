@@ -65,7 +65,7 @@ $ make
 
 ### 5. Build ForestDB-Bench
 ```
-$ cd forestdb-bench
+$ cd bench
 $ cmake -DCMAKE_INCLUDE_PATH=/path/rocksdb/include -DCMAKE_LIBRARY_PATH=/path/rocksdb/build ../
 $ make rocksdb_bench
 ```
@@ -100,7 +100,7 @@ Below are the guidelines for reproducing results mentioned in the paper from scr
 
 ### 1. Copy scripts
 ```
-$ cd forestdb-bench/build
+$ cd bench/build
 $ ../scripts/copy-scripts.sh
 ```
 
