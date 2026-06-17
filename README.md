@@ -67,7 +67,7 @@ $ make
 ```
 $ cd forestdb-bench
 $ cmake -DCMAKE_INCLUDE_PATH=/path/rocksdb/include -DCMAKE_LIBRARY_PATH=/path/rocksdb/build ../
-$ make
+$ make rocksdb_bench
 ```
 
 ### 6. Build and load FLAX
@@ -89,3 +89,79 @@ $ ./init_nvmev.sh
 ```
 
 ## Evaluations
+Below are the guidelines for reproducing results mentioned in the paper from scratch. For claims and expectations of the artifact, please refer to [CLAIMS.md](CLAIMS.md)
+
+### 0. Before running benchmarks
+- For every experiment except §6.2 (Write Performance with FLAX), we used pre-loaded, stabilized DBs and copied them before each benchmark run.
+   - This ensures a fair comparison across configurations and prevents load-phase compactions from occurring during the evaluation runs.
+   - Because it also cuts the total evaluation time, we recommend preparing three base DBs: one for 128 B values, one for 4 KB values, and one for 128 B values with a Bloom filter.
+   - We will explain how to load the base DBs below.
+- For every experiment, we limited the available host memory using cgroups.
+
+### 1. Copy scripts
+```
+$ cd forestdb-bench/build
+$ ../scripts/copy-scripts.sh
+```
+
+### 2. Prepare base DBs
+```
+```
+
+### 3. Write-only workload (Figure 7)
+In this experiment, we test three configurations: Host, CSD, and FLAX.
+This will run write-only workload with 16 B keys while varying value sizes from 128 B to 4 KB.
+```
+$ ./compaction_driver.sh host
+$ ./compaction_driver.sh csd
+$ ./compaction_driver.sh flax
+```
+
+### 4. Ablation study (Figure 8)
+In this experiment, we test six configurations: Host, CSD, A, AB, ABC, FLAX.
+This will run write-only workload with 16 B keys and 4 KB values.
+Since we can reuse the host, CSD, and FLAX results from the previous evaluation, we only need to run A, AB, and ABC here. However, ABC requires modifying the RocksDB code, and since it shows only a small difference and does not affect our claims, we omit it. If you wish, you can edit `db/compaction/compaction_job.cc` to reduce the number of CRC offloading cores from 2 to 1.
+```
+$ ./ablation_driver.sh A
+$ ./ablation_driver.sh AB
+```
+
+### 5. Read-only workload (Figure 9)
+In this experiment, we test seven configurations: Host, CSD, FLAX-STD, FLAX-CMP, 8:2, 6:4, 4:6, 2:8.
+This will run read-only workload with 16 B keys and 128 B values.
+```
+$ ./read-only_driver.sh uniform  # Figure 9(a)
+$ ./read-only_driver.sh large    # Figure 9(b)
+$ ./read-only_driver.sh bloom    # Figure 9(c)
+$ ./read-only_driver.sh skew     # Figure 9(d)
+```
+
+### 6. Read-only workload with index block caching (Table 2)
+In this experiment, we test three configurations: Host, CSD, FLAX.
+We need to change the benchmark code to enable index block caching configuration.
+```
+$ cp ../wrappers/index_block_caching.cc ../wrappers/couch_rocks.cc
+$ ./demand-load_driver.sh host
+$ ./demand-load_driver.sh csd
+$ ./demand-load_driver.sh flax
+$ cp ../wrappers/couch_rocks.cc ../wrappers/index_block_caching.cc # reset code
+```
+
+### 7. YCSB (Figure 10)
+In this experiment, we test five configurations: Host, CSD, FLAX-C, FLAX-R, FLAX
+This will run YCSB workloads A-F across 128 B values and 4 KB values
+```
+(128 B evaluation - Figure 10(a))
+$ ./ycsb_driver.sh 128 host
+$ ./ycsb_driver.sh 128 csd
+$ ./ycsb_driver.sh 128 compaction-only
+$ ./ycsb_driver.sh 128 read-only
+$ ./ycsb_driver.sh 128 flax
+
+(4 KB evaluation - Figure 10(b))
+$ ./ycsb_driver.sh 4096 host
+$ ./ycsb_driver.sh 4096 csd
+$ ./ycsb_driver.sh 4096 compaction-only
+$ ./ycsb_driver.sh 4096 read-only
+$ ./ycsb_driver.sh 4096 flax
+```
