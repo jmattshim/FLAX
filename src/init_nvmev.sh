@@ -27,7 +27,7 @@ sudo insmod nvmev.ko \
 
 
 echo "Set CPU Frequency"
-source ../../common/perf.sh
+source perf.sh
 
 sleep 3
 ./mount.sh
